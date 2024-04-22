@@ -20,8 +20,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    // @Autowired
-    private AuthenticationSuccessHandler myAuthenticationSuccessHandler;
+    private final AuthenticationSuccessHandler myAuthenticationSuccessHandler;
 
     private final LogoutSuccessHandler myLogoutSuccessHandler;
 
@@ -38,10 +37,15 @@ public class SecurityConfig {
                             "/user/registration*")
                             .permitAll()
                             .requestMatchers("/home")
-                            .authenticated();
+                            .authenticated()
+                            .requestMatchers("/admin")
+                            .hasAnyAuthority("ROLE_ADMIN")
+                            .requestMatchers("/user")
+                            .hasAnyAuthority("ROLE_ADMIN", "ROLE_USER");
                 })
                 .formLogin(formLogin -> formLogin.loginPage("/login")
-                        .defaultSuccessUrl("/home", true)
+                        .successHandler(myAuthenticationSuccessHandler)
+                        // .defaultSuccessUrl("/home", true)
                         .failureUrl("/login?error=true")
                         .failureHandler(authenticationFailureHandler)
                         .permitAll())

@@ -56,10 +56,16 @@
 		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest</artifactId>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -87,13 +93,6 @@
 						<goals>
 							<goal>report</goal>
 						</goals>
-						<!--
-						<configuration>
-							<formats>
-								<format>XML</format>
-							</formats>
-						</configuration>
-						-->
 					</execution>
 				</executions>
 			</plugin>
