@@ -105,4 +105,19 @@ class SecurityIntegrationTest {
 				.andExpect(status().is3xxRedirection())
 				.andExpect(header().string(LOCATION, endsWith("/user")));
 	}
+
+	@Test
+	void adminLogin_happyPath() throws Exception {
+		// Given:
+		when(mockUserPort.findByUsername(eq("admin"))).thenReturn(UserDto.builder()
+				.username("fbar")
+				.password("$2a$11$k9uX0rgGd8WWWYdzFHeIGuWLFZ1I5XuvbXyqelYbFXiy0/6tziq6m")
+				.roles(asList("ROLE_ADMIN"))
+				.build());
+
+		// When:
+		mvc.perform(formLogin().user("admin").password("qwerty"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(header().string(LOCATION, endsWith("/admin")));
+	}
 }

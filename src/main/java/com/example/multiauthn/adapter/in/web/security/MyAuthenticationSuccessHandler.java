@@ -24,6 +24,10 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
                 .anyMatch(a -> a.getAuthority().equals("ROLE_USER"))) {
             redirectStrategy.sendRedirect(request, response, "/user");
         }
+        if (authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            redirectStrategy.sendRedirect(request, response, "/admin");
+        }
     }
 
 }
