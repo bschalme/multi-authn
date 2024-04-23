@@ -10,10 +10,18 @@
 </head>
 
 <body>
-    <div th:if="${message != null}" class="alert alert-info" th:utext="${message}">message</div>
-    <div th:if="${error != null}" class="alert alert-danger" th:utext="${session[SPRING_SECURITY_LAST_EXCEPTION]}">error
-    </div>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav navbar-left">
+                <li><a th:href="@{/user/registration}" th:utext="#{label.register}">register</a></li>
+            </ul>
+        </div>
+    </nav>
     <div class="container">
+        <div th:if="${message != null}" class="alert alert-info" th:utext="${message}">message</div>
+        <div th:if="${error != null}" class="alert alert-danger" th:utext="${session[SPRING_SECURITY_LAST_EXCEPTION]}">
+            error
+        </div>
         <div class="form-header">
             <h1 class="mb-3" th:text="#{label.form.loginTitle}">Login</h1>
         </div>

@@ -15,8 +15,8 @@
         <h1 id="error" class="alert alert-danger" th:if="${session[SPRING_SECURITY_LAST_EXCEPTION]}"
             th:utext="#{message.logoutError}">error</h1>
 
-        <h1 id="success" class="alert alert-info" th:if="${param.logSucc}" th:utext="#{message.logoutSucc}"> success
-        </h1>
+        <h4 id="success" class="alert alert-info" th:if="${param.logSucc}" th:utext="#{message.logoutSucc}"> success
+        </h4>
         <br /><br /><br />
         <a class="btn btn-primary" th:href="@{/login}" th:utext="#{label.form.loginLink}">login</a>
     </div>

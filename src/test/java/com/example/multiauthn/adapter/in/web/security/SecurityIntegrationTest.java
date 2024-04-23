@@ -28,10 +28,7 @@ import com.example.multiauthn.application.port.in.RegistrationUseCase;
 import com.example.multiauthn.application.port.out.UserPort;
 import com.example.multiauthn.domain.UserDto;
 
-// @ExtendWith(SpringExtension.class)
-// @ContextConfiguration(classes = { AppConfig.class, SecurityConfig.class })
 @SpringBootTest
-// @WebAppConfiguration
 class SecurityIntegrationTest {
 
 	@Autowired
@@ -113,6 +110,21 @@ class SecurityIntegrationTest {
 				.username("fbar")
 				.password("$2a$11$k9uX0rgGd8WWWYdzFHeIGuWLFZ1I5XuvbXyqelYbFXiy0/6tziq6m")
 				.roles(asList("ROLE_ADMIN"))
+				.build());
+
+		// When:
+		mvc.perform(formLogin().user("admin").password("qwerty"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(header().string(LOCATION, endsWith("/admin")));
+	}
+
+	@Test
+	void multiRoleUserLogin_getsHighestPage() throws Exception {
+		// Given:
+		when(mockUserPort.findByUsername(eq("admin"))).thenReturn(UserDto.builder()
+				.username("fbar")
+				.password("$2a$11$k9uX0rgGd8WWWYdzFHeIGuWLFZ1I5XuvbXyqelYbFXiy0/6tziq6m")
+				.roles(asList("ROLE_USER", "ROLE_ADMIN"))
 				.build());
 
 		// When:
