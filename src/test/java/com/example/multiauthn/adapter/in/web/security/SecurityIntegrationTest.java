@@ -3,6 +3,8 @@ package com.example.multiauthn.adapter.in.web.security;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
@@ -12,14 +14,18 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+
+import java.util.Locale;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.MessageSource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -35,6 +41,9 @@ class SecurityIntegrationTest {
 	private WebApplicationContext context;
 
 	@MockBean
+	private MessageSource mockMessages;
+
+	@MockBean
 	private RegistrationUseCase registrationUseCase;
 
 	@MockBean
@@ -47,6 +56,48 @@ class SecurityIntegrationTest {
 		mvc = MockMvcBuilders.webAppContextSetup(context)
 				.apply(springSecurity())
 				.build();
+	}
+
+	@Test
+	void getLoginPage_happyPath() throws Exception {
+		// Given:
+
+		// When:
+		mvc.perform(get("/login"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("login"));
+
+		// Then:
+	}
+
+	@Test
+	void getLoginPageWithErrorAndMessage_displaysThem() throws Exception {
+		// Given:
+		when(mockMessages.getMessage(eq("label.test"), isNull(), isA(Locale.class)))
+				.thenReturn("Test Label");
+
+		// When:
+		mvc.perform(get("/login")
+				.param("messageKey", "label.test")
+				.param("error", "Oh, the humanity!"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("login"))
+				.andExpect(model().attribute("message", "Test Label"))
+				.andExpect(model().attribute("error", "Oh, the humanity!"));
+
+		// Then:
+	}
+
+	@Test
+	void getRegistrationPage_happyPath() throws Exception {
+		// Given:
+
+		// When:
+		mvc.perform(get("/user/registration"))
+				.andExpect(status().isOk())
+				.andExpect(view().name("registration"));
+
+		// Then:
 	}
 
 	@Test
@@ -86,6 +137,19 @@ class SecurityIntegrationTest {
 				.param("email", "usera@example.com"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("successRegister"));
+	}
+
+	@Test
+	void loginBadCredentials() throws Exception {
+		// Given:
+		when(mockUserPort.findByUsername(eq("fbar"))).thenReturn(null);
+
+		// When:
+		mvc.perform(formLogin().user("fbar").password("qwerty"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(header().string(LOCATION, endsWith("/login?error=true")));
+
+		// Then:
 	}
 
 	@Test
