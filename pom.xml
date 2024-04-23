@@ -19,7 +19,7 @@
 		<java.version>17</java.version>
 		<sonar.organization>bschalme</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
-		<sonar.sources>src/main/java,src/main/resources/static,src/main/resources/templates</sonar.sources>
+		<sonar.sources>src/main/java,src/main/resources/templates</sonar.sources>
 		<sonar.tests>src/test/java</sonar.tests>
 	</properties>
 	<dependencies>
