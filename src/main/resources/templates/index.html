@@ -10,14 +10,20 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
         <div class="container-fluid">
-            <div class="navbar-header">
-                <a class="navbar-brand" th:href="@{/home.html}" th:utext="#{label.pages.home.title}">home</a>
+            <a class="navbar-brand" href="#">Multi Authentication</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" th:href="@{/logout}"
+                            th:utext="#{label.pages.logout}">logout</a></li>
+                </ul>
             </div>
-            <ul class="nav navbar-nav navbar-right">
-                <li><a th:href="@{/logout}" th:utext="#{label.pages.logout}">logout</a> </li>
-            </ul>
         </div>
     </nav>
 
