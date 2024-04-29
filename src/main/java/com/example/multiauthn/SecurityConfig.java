@@ -45,7 +45,6 @@ public class SecurityConfig {
                 })
                 .formLogin(formLogin -> formLogin.loginPage("/login")
                         .successHandler(myAuthenticationSuccessHandler)
-                        // .defaultSuccessUrl("/home", true)
                         .failureUrl("/login?error=true")
                         .failureHandler(authenticationFailureHandler)
                         .permitAll())

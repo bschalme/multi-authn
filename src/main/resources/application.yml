@@ -9,5 +9,6 @@ spring:
     defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
+    open-in-view: false
     show-sql: false
 

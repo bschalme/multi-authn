@@ -1,6 +1,6 @@
 # Multiple Authentication
 
-This is a showcase project that demonstrates user registration and logging in. It shows how you can federate more thyan one source for authentication ("authn"), while have one source of truth for authorization ("authzn"). I wrote it with the intent of adapting it to other projects as required.
+This is a showcase project that demonstrates user registration and logging in. It shows how you can federate more than one source for authentication ("authn"), while have one source of truth for authorization ("authzn"). I wrote it with the intent of adapting it to other projects as required.
 
 Much gratitude to Eugen Paraschiv and his team at [Baeldung](https://www.baeldung.com/) for their numerous tutorials that served as inspiration to this project.
 
