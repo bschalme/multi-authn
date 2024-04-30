@@ -41,6 +41,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
         run: mvn --batch-mode verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=bschalme_multi-authn
       - run: mkdir staging && cp target/*.jar staging
       - uses: actions/upload-artifact@v3
