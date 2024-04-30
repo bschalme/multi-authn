@@ -168,6 +168,21 @@ class SecurityIntegrationTest {
 	}
 
 	@Test
+	void oauth2UserLogin_happyPath() throws Exception {
+		// Given:
+		when(mockUserPort.findByUsername(eq("fbar"))).thenReturn(UserDto.builder()
+				.username("fbar")
+				.password("$2a$11$k9uX0rgGd8WWWYdzFHeIGuWLFZ1I5XuvbXyqelYbFXiy0/6tziq6m")
+				.roles(asList("OAUTH2_USER"))
+				.build());
+
+		// When:
+		mvc.perform(formLogin().user("fbar").password("qwerty"))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(header().string(LOCATION, endsWith("/user")));
+	}
+
+	@Test
 	void adminLogin_happyPath() throws Exception {
 		// Given:
 		when(mockUserPort.findByUsername(eq("admin"))).thenReturn(UserDto.builder()

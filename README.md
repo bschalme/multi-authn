@@ -6,9 +6,22 @@ Much gratitude to Eugen Paraschiv and his team at [Baeldung](https://www.baeldun
 
 ## Resources
 
+* [OAuth2 Social Login with Spring Boot Security](https://howtodoinjava.com/spring-security/oauth2-login-with-spring-boot-security/)
+  * From a search on "social login spring boot"
 * [The Registration Process With Spring Security](https://www.baeldung.com/registration-with-spring-mvc-and-spring-security)
   * From a search on "spring security registration example"
 * [Spring Security OAuth2](https://docs.spring.io/spring-security/reference/servlet/oauth2/index.html)
 * H2 console is at /h2-console. Use this DML to see the registered users:
   * `SELECT u.userid, u.username, u.password, r.name FROM user_account u INNER JOIN user_roles ur on u.userid = ur.user_jpa_entity_userid INNER JOIN role r ON ur.roles_role_id = r.role_id`
 
+## Running
+
+You will need to set a bunch of OAuth2 Client IDs and secrets. Take `setenv-sample`, copy it to `setenv`, change the values in there to your own, `chmod 700 setenv`, and dot-run it:
+
+```. ./setenv```
+
+Then run multi-authn:
+
+```./mvnw spring-boot:run```
+
+Browse to [http://localhost:8080](http://localhost:8080).

@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+#
+# Copy this file to setenv, and replace the values with your own:
+export GITHUB_CLIENT_ID=abc123
+export GITHUB_CLIENT_SECRET=def456
+

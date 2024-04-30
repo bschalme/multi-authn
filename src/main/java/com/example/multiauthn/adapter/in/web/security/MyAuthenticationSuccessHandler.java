@@ -20,13 +20,13 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
-                if (authentication.getAuthorities().stream()
+        if (authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
             redirectStrategy.sendRedirect(request, response, "/admin");
             return;
         }
         if (authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_USER"))) {
+                .anyMatch(a -> a.getAuthority().equals("ROLE_USER") || a.getAuthority().equals("OAUTH2_USER"))) {
             redirectStrategy.sendRedirect(request, response, "/user");
         }
     }

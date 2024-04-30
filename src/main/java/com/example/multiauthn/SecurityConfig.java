@@ -41,13 +41,15 @@ public class SecurityConfig {
                             .requestMatchers("/admin")
                             .hasAnyAuthority("ROLE_ADMIN")
                             .requestMatchers("/user")
-                            .hasAnyAuthority("ROLE_ADMIN", "ROLE_USER");
+                            .hasAnyAuthority("ROLE_ADMIN", "ROLE_USER", "OAUTH2_USER");
                 })
                 .formLogin(formLogin -> formLogin.loginPage("/login")
                         .successHandler(myAuthenticationSuccessHandler)
                         .failureUrl("/login?error=true")
                         .failureHandler(authenticationFailureHandler)
                         .permitAll())
+                .oauth2Login(c -> c.loginPage("/login")
+                        .successHandler(myAuthenticationSuccessHandler))
                 .logout(logout -> logout.logoutSuccessHandler(myLogoutSuccessHandler)
                         .invalidateHttpSession(true)
                         .logoutSuccessUrl("/logout.html?logSucc=true")
