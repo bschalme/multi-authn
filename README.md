@@ -6,6 +6,8 @@ Much gratitude to Eugen Paraschiv and his team at [Baeldung](https://www.baeldun
 
 ## Resources
 
+* Set a breakpoint at `org.springframework.security.oauth2.client.authentication.OAuth2AuthorizationCodeAuthenticationProvider#authenticate` to follow the exchange
+of an authorization code for an access token. Step through and step out of this method to its caller - `org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationProvider#authenticate` to see it setting an implementation of a fully authenticated Spring Security Authentication object.
 * [OAuth2 Social Login with Spring Boot Security](https://howtodoinjava.com/spring-security/oauth2-login-with-spring-boot-security/)
   * From a search on "social login spring boot"
 * [The Registration Process With Spring Security](https://www.baeldung.com/registration-with-spring-mvc-and-spring-security)
