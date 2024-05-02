@@ -6,6 +6,8 @@ Much gratitude to Eugen Paraschiv and his team at [Baeldung](https://www.baeldun
 
 ## Resources
 
+* The /login page design is based on [Bootstrap 5 Login Form with Social Login Buttons](https://bootstrapbrain.com/component/bootstrap-login-form-with-social-login-buttons/) from 
+BootstrapBrain
 * Set a breakpoint at `org.springframework.security.oauth2.client.authentication.OAuth2AuthorizationCodeAuthenticationProvider#authenticate` to follow the exchange
 of an authorization code for an access token. Step through and step out of this method to its caller - `org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationProvider#authenticate` to see it setting an implementation of a fully authenticated Spring Security Authentication object.
 * [OAuth2 Social Login with Spring Boot Security](https://howtodoinjava.com/spring-security/oauth2-login-with-spring-boot-security/)
