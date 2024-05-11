@@ -1,6 +1,7 @@
 package com.example.multiauthn.adapter.in.web.security;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.DefaultRedirectStrategy;
@@ -16,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
+    private Set<String> userRoles = Set.of("ROLE_USER", "OAUTH2_USER", "ROLE_user");
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -26,7 +28,7 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
             return;
         }
         if (authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_USER") || a.getAuthority().equals("OAUTH2_USER"))) {
+                .anyMatch(a -> userRoles.contains(a.getAuthority()))) {
             redirectStrategy.sendRedirect(request, response, "/user");
         }
     }
