@@ -5,7 +5,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasSize;
+import static java.lang.String.format;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
+
+import jakarta.servlet.http.Cookie;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -22,8 +26,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
+import java.net.URI;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -95,32 +102,22 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 		// Then:
 		// Fish out the Location response header, and use that to Get the Keycloak login
 		// page:
+		Cookie[] multiAuthnCookies = result.getResponse().getCookies();
 		String location = result.getResponse().getHeader(LOCATION);
 		assertThat("Location header;", location, not(emptyOrNullString()));
-		log.debug("Location header = %s", location);
+		log.debug("Location header = {}", location);
+		MultiValueMap<String, String> responseCookies = new LinkedMultiValueMap<>();
 		WebClient webclient = WebClient.builder().build();
-		Mono<ResponseEntity<String>> loginPageMono = webclient.get().uri(location)
-				.retrieve()
-				.toEntity(String.class);
+		String loginPageResponseBody = webclient.get().uri(location)
+				.exchangeToMono(response -> {
+					return response.bodyToMono(String.class)
+							.flatMap(Mono::just)
+							.doOnNext(ignored -> response.cookies().forEach(
+									(key, respCookies) -> responseCookies.add(key, respCookies.get(0).getValue())));
+				})
+				.block();
 
-		ResponseEntity<String> loginPageResponse = loginPageMono.block();
-		HttpHeaders loginPageResponseHeaders = loginPageResponse.getHeaders();
-		String loginPageResponseBody = loginPageResponse.getBody();
-		/*
-		 * RestClient restClient = RestClient.create();
-		 * ConvertibleClientHttpResponse loginPage =
-		 * restClient.get().uri(location).exchange((request, response) -> {
-		 * response.getHeaders().forEach((name, values) -> {
-		 * values.forEach(value -> log.debug("Header '{}' = '{}'", name, value));
-		 * });
-		 * return response;
-		 * });
-		 * loginPage.getHeaders().forEach((name, values) -> {
-		 * values.forEach(value -> log.debug("Header '{}' = '{}'", name, value));
-		 * });
-		 */
 		Document loginPageDoc = Jsoup.parse(loginPageResponseBody);
-
 		log.debug("Title = {}", loginPageDoc.title());
 		Elements formTags = loginPageDoc.select("form[id=kc-form-login]");
 		assertThat("Form tags;", formTags, hasSize(1));
@@ -134,6 +131,7 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 
 		// OK, now login:
 		Mono<ResponseEntity<String>> loginResponseMono = webclient.post().uri(formUrl)
+				.cookies(cookieMap -> cookieMap.addAll(responseCookies))
 				.body(BodyInserters.fromFormData(formData))
 				.retrieve()
 				.onStatus(HttpStatus.BAD_REQUEST::equals,
@@ -144,17 +142,24 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 		assertThat("HTTP Status Code after entering login credentials;",
 				loginResultResponse.getStatusCode().is3xxRedirection());
 		HttpHeaders loginResponseHeaders = loginResultResponse.getHeaders();
-		/*
-		 * String loginResponseBody =
-		 * restClient.post().uri(formUrl).body("username=user1&password=xsw2@WS")
-		 * .header("Content-Type",
-		 * APPLICATION_FORM_URLENCODED.toString()).exchange((request, response) -> {
-		 * log.debug("Response status = {}", response.getStatusCode());
-		 * log.debug("Response headers = {}", response.getHeaders());
-		 * return IOUtils.toString(response.getBody(), Charset.forName("UTF-8"));
-		 * });
-		 * log.debug("Response body: {}", loginResponseBody);
-		 */
+		log.debug("After login, Location response header = {}", loginResponseHeaders.get(LOCATION));
+
+		URI codeUri = URI.create(loginResponseHeaders.get(LOCATION).get(0));
+		String path = format("%s?%s", codeUri.getPath(), codeUri.getRawQuery());
+		log.debug("OAuth2 code path = {}", path);
+		List<Cookie> cookieList = responseCookies.entrySet().stream()
+				.map(entry -> new Cookie(entry.getKey(), entry.getValue().get(0)))
+				.collect(Collectors.toList());
+				log.debug("I am going to send these cookies: {}", cookieList);
+		result = mvc.perform(get(path))
+		        // .cookie(multiAuthnCookies))
+		        // .cookie(cookieList.toArray(new Cookie[0])))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(header().string(LOCATION, startsWith("/user")))
+				.andReturn();
+				String redirectAfterLogin = result.getResponse().getHeaderValue(LOCATION).toString();
+		log.debug("Got the access token; now being redirected to {}", redirectAfterLogin);
+		log.debug("Body of redirected URI = {}", result.getResponse().getContentAsString());
 	}
 
 	@Test
