@@ -7,7 +7,25 @@
         </encoder>
     </appender>
 
-    <logger name="com.example.multiauthn.adapter.in.web.security.SecurityIntegrationTest" level="debug" additivity="false">
+    <logger name="com.example.multiauthn.adapter.in.web.security.SecurityIntegrationTest" level="WARN" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="com.zaxxer.hikari" level="WARN" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="org.apache" level="WARN" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="org.hibernate" level="WARN" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="org.springframework.boot.web.embedded.tomcat.TomcatWebServer" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="org.springframework.security" level="WARN" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="org.springframework" level="WARN" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 

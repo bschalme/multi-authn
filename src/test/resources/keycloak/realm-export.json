@@ -672,12 +672,14 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://localhost:0/*",
         "http://localhost:8081/*",
-        "http://localhost/*"
+        "http://localhost:0/*",
+        "http://localhost/*",
+        "http://localhost:*/*"
       ],
       "webOrigins": [
-        "http://localhost:8081"
+        "http://localhost:8081",
+        "http://localhost:*"
       ],
       "notBefore": 0,
       "bearerOnly": false,

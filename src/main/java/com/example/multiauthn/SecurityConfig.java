@@ -75,7 +75,7 @@ public class SecurityConfig {
                     h.frameOptions(FrameOptionsConfig::sameOrigin);
                 })
                 .authorizeHttpRequests(authz -> {
-                    authz.requestMatchers("/", "/favicon.ico", "/h2-console/**", "/login*", "/logout*", "/loggedout*",
+                    authz.requestMatchers("/", "/favicon.ico", "/h2-console/**", "/login/**", "/logout*", "/loggedout*",
                             "/user/registration*")
                             .permitAll()
                             .requestMatchers("/home")
