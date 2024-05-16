@@ -49,7 +49,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
@@ -103,15 +103,35 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 	@Test
 	void performLoginAsUser_happyPath() throws Exception {
 		// Given:
+		TestingAuthenticationToken user1 = new TestingAuthenticationToken("user1", "xsw2@WS");
 
 		// When:
+		EntityExchangeResult<byte[]> loggedInResponse = doAuthCodeLogin(user1, "/user");
+
+		// Then:
+		String redirectAfterLogin = loggedInResponse.getResponseHeaders().get(LOCATION).get(0);
+		assertThat("Redirect destination after getting access token;", redirectAfterLogin, containsString("/user"));
+		loggedInResponse.getResponseCookies().entrySet().stream()
+				.forEach(entry -> {
+					log.debug("Key = {}, Value = {}", entry.getKey(), entry.getValue());
+				});
+		log.debug("Got the access token; now being redirected to {}", redirectAfterLogin);
+		Cookie newJsessionidCookie = new Cookie("JSESSIONID", loggedInResponse.getResponseCookies().get("JSESSIONID").get(0).getValue());
+		EntityExchangeResult<byte[]> userHomePageResponse = clientForMultiAuthn.get().uri(redirectAfterLogin)
+				.cookie(newJsessionidCookie.getName(), newJsessionidCookie.getValue())
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody()
+				.returnResult();
+		log.debug("After exchanging auth code for a token, response body = {}",
+				IOUtils.toString(userHomePageResponse.getResponseBody(), "UTF8"));
+    }
+
+    private EntityExchangeResult<byte[]> doAuthCodeLogin(TestingAuthenticationToken user, String expectedRedirectUriSubstring) throws Exception {
 		// Get multi-authn's /login page:
 		String multiAuthnBaseUrl = format("http://localhost:%d", multiAuthnServerPort);
 		log.debug("multiAuthnBaseUrl = {}", multiAuthnBaseUrl);
-		/* 
-		WebTestClient clientForMultiAuthn = WebTestClient.bindToServer()
-				.baseUrl(multiAuthnBaseUrl).build();
-				*/
+
 		// Extract cookies from the Response:
 		MultiValueMap<String, ResponseCookie> responseCookies = clientForMultiAuthn.get().uri("/login")
 				.exchange()
@@ -122,15 +142,15 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 		// Click on .../SpringBootKeycloak to select login using Keycloak, and expect a
 		// redirection to Keycloak:
 		EntityExchangeResult<byte[]> clickKeycloakResponse = clientForMultiAuthn.get()
-				.uri(format("http://localhost:%d/oauth2/authorization/keycloak", multiAuthnServerPort))
+				.uri("/oauth2/authorization/keycloak")
 				.exchange()
 				.expectStatus().is3xxRedirection()
+				.expectCookie().exists("JSESSIONID")
 				.expectHeader().value(LOCATION, containsString(
 						"/realms/SpringBootKeycloak/protocol/openid-connect/auth?response_type=code&client_id=multi-authn&scope=openid"))
 				.expectBody()
 				.returnResult();
 
-		// Then:
 		// Fish out the Location response header, and use that to Get the Keycloak login
 		// page:
 		assertThat("Cookies set from GET call to /oauth2/authorization/keycloak;",
@@ -172,8 +192,8 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 		log.debug("Form action = '{}'", formUrl);
 
 		MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-		formData.put("username", Collections.singletonList("user1"));
-		formData.put("password", Collections.singletonList("xsw2@WS"));
+		formData.put("username", Collections.singletonList(user.getPrincipal().toString()));
+		formData.put("password", Collections.singletonList(user.getCredentials().toString()));
 
 		// OK, now login:
 		MultiValueMap<String, String> kecloakPostLoginResponseCookies = new LinkedMultiValueMap<>();
@@ -216,7 +236,6 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 		 log.debug("Trading the auth code for an access token at URL: {}", codeUri);
 		 log.debug("I am going to send these cookies: {}={}", jsessionidCookie.getName(), jsessionidCookie.getValue());
 		 // Thread.sleep(120000);
-		 OAuth2LoginAuthenticationFilter x;
 		 EntityExchangeResult<byte[]> result = clientForMultiAuthn.get().uri(codeUri)
 		        .header("Sec-Fetch-Dest", "document")
 		        .header("Sec-Fetch-Mode", "navigate")
@@ -225,9 +244,10 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 				.header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:126.0) Gecko/20100101 Firefox/126.0")
 				.cookie(jsessionidCookie.getName(), jsessionidCookie.getValue())
 				.exchange()
-				.expectHeader().value(LOCATION, containsString("/user"))
+				.expectHeader().value(LOCATION, containsString(expectedRedirectUriSubstring))
 				.expectBody()
 				.returnResult();
+				/* 
 		String redirectAfterLogin = result.getResponseHeaders().get(LOCATION).get(0);
 		result.getResponseCookies().entrySet().stream()
 				.forEach(entry -> {
@@ -244,6 +264,9 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 		log.debug("After exchanging auth code for a token, response body = {}",
 				IOUtils.toString(result.getResponseBody(), "UTF8"));
 		assertThat("Redirect destination after getting access token;", redirectAfterLogin, containsString("/user"));
+		*/
+
+		return result;
 	}
 
 	@Test
