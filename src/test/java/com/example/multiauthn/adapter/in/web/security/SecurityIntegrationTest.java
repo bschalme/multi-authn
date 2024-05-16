@@ -109,14 +109,21 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 		EntityExchangeResult<byte[]> loggedInResponse = doAuthCodeLogin(user1, "/user");
 
 		// Then:
-		String redirectAfterLogin = loggedInResponse.getResponseHeaders().get(LOCATION).get(0);
+		String redirectAfterLogin = null;
+		List<String> locationHeaders = loggedInResponse.getResponseHeaders().get(LOCATION);
+		if (locationHeaders != null) {
+			redirectAfterLogin = locationHeaders.stream()
+					.findFirst()
+					.orElseThrow(() -> new IllegalStateException("No redirect after login"));
+		}
 		assertThat("Redirect destination after getting access token;", redirectAfterLogin, containsString("/user"));
 		loggedInResponse.getResponseCookies().entrySet().stream()
 				.forEach(entry -> {
 					log.debug("Key = {}, Value = {}", entry.getKey(), entry.getValue());
 				});
 		log.debug("Got the access token; now being redirected to {}", redirectAfterLogin);
-		Cookie newJsessionidCookie = new Cookie("JSESSIONID", loggedInResponse.getResponseCookies().get("JSESSIONID").get(0).getValue());
+		Cookie newJsessionidCookie = new Cookie("JSESSIONID",
+				loggedInResponse.getResponseCookies().get("JSESSIONID").get(0).getValue());
 		EntityExchangeResult<byte[]> userHomePageResponse = clientForMultiAuthn.get().uri(redirectAfterLogin)
 				.cookie(newJsessionidCookie.getName(), newJsessionidCookie.getValue())
 				.exchange()
@@ -125,20 +132,14 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 				.returnResult();
 		log.debug("After exchanging auth code for a token, response body = {}",
 				IOUtils.toString(userHomePageResponse.getResponseBody(), "UTF8"));
-    }
+	}
 
-    private EntityExchangeResult<byte[]> doAuthCodeLogin(TestingAuthenticationToken user, String expectedRedirectUriSubstring) throws Exception {
+	private EntityExchangeResult<byte[]> doAuthCodeLogin(TestingAuthenticationToken user,
+			String expectedRedirectUriSubstring) throws Exception {
 		// Get multi-authn's /login page:
 		String multiAuthnBaseUrl = format("http://localhost:%d", multiAuthnServerPort);
 		log.debug("multiAuthnBaseUrl = {}", multiAuthnBaseUrl);
 
-		// Extract cookies from the Response:
-		MultiValueMap<String, ResponseCookie> responseCookies = clientForMultiAuthn.get().uri("/login")
-				.exchange()
-				.expectStatus().isOk()
-				.expectBody(String.class)
-				.returnResult()
-				.getResponseCookies();
 		// Click on .../SpringBootKeycloak to select login using Keycloak, and expect a
 		// redirection to Keycloak:
 		EntityExchangeResult<byte[]> clickKeycloakResponse = clientForMultiAuthn.get()
@@ -155,7 +156,8 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 		// page:
 		assertThat("Cookies set from GET call to /oauth2/authorization/keycloak;",
 				clickKeycloakResponse.getResponseCookies().size(), greaterThan(0));
-		ResponseCookie clickKeycloakResponseSessionCookie = clickKeycloakResponse.getResponseCookies().get("JSESSIONID").get(0);
+		ResponseCookie clickKeycloakResponseSessionCookie = clickKeycloakResponse.getResponseCookies().get("JSESSIONID")
+				.get(0);
 		Cookie jsessionidCookie = new Cookie("JSESSIONID", clickKeycloakResponseSessionCookie.getValue());
 		log.debug("{} = {}", jsessionidCookie.getName(), jsessionidCookie.getValue());
 		String location = clickKeycloakResponse.getResponseHeaders().get(LOCATION).get(0);
@@ -165,8 +167,8 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 		DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory();
 		factory.setEncodingMode(NONE);
 		WebClient webclient = WebClient.builder()
-		        .uriBuilderFactory(factory)
-		        .build();
+				.uriBuilderFactory(factory)
+				.build();
 		String loginPageResponseBody = webclient.get().uri(location)
 				.exchangeToMono(response -> {
 					return response.bodyToMono(String.class)
@@ -217,9 +219,9 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 					HttpStatusCode statusCode = response.statusCode();
 					assertThat("HTTP Status Code after entering login credentials;", statusCode.is3xxRedirection());
 					log.debug("After login, Location response header = {}", loginResponseHeaders.get(LOCATION));
-					List<String> locationHeaders = loginResponseHeaders.get(LOCATION);
-					if (!locationHeaders.isEmpty()) {
-						return Mono.just(URI.create(locationHeaders.get(0)));
+					URI locationHeaders = loginResponseHeaders.getLocation();
+					if (locationHeaders != null) {
+						return Mono.just(locationHeaders);
 					} else {
 						return Mono.error(new IllegalStateException("Location header not found in response"));
 					}
@@ -232,39 +234,22 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 				.map(entry -> new Cookie(entry.getKey(), entry.getValue().get(0)))
 				.collect(Collectors.toList());
 
-		 // Trade the authorization code for an access token:
-		 log.debug("Trading the auth code for an access token at URL: {}", codeUri);
-		 log.debug("I am going to send these cookies: {}={}", jsessionidCookie.getName(), jsessionidCookie.getValue());
-		 // Thread.sleep(120000);
-		 EntityExchangeResult<byte[]> result = clientForMultiAuthn.get().uri(codeUri)
-		        .header("Sec-Fetch-Dest", "document")
-		        .header("Sec-Fetch-Mode", "navigate")
-		        .header("Sec-Fetch-Site", "cross-site")
-		        .header("Sec-Fetch-User", "?1")
-				.header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:126.0) Gecko/20100101 Firefox/126.0")
+		// Trade the authorization code for an access token:
+		log.debug("Trading the auth code for an access token at URL: {}", codeUri);
+		log.debug("I am going to send these cookies: {}={}", jsessionidCookie.getName(), jsessionidCookie.getValue());
+		EntityExchangeResult<byte[]> result = clientForMultiAuthn.get().uri(codeUri)
+				.header("Sec-Fetch-Dest", "document")
+				.header("Sec-Fetch-Mode", "navigate")
+				.header("Sec-Fetch-Site", "cross-site")
+				.header("Sec-Fetch-User", "?1")
+				.header("User-Agent",
+						"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:126.0) Gecko/20100101 Firefox/126.0")
 				.cookie(jsessionidCookie.getName(), jsessionidCookie.getValue())
 				.exchange()
+				.expectStatus().is3xxRedirection()
 				.expectHeader().value(LOCATION, containsString(expectedRedirectUriSubstring))
 				.expectBody()
 				.returnResult();
-				/* 
-		String redirectAfterLogin = result.getResponseHeaders().get(LOCATION).get(0);
-		result.getResponseCookies().entrySet().stream()
-				.forEach(entry -> {
-					log.debug("Key = {}, Value = {}", entry.getKey(), entry.getValue());
-				});
-		log.debug("Got the access token; now being redirected to {}", redirectAfterLogin);
-		Cookie newJsessionidCookie = new Cookie("JSESSIONID", result.getResponseCookies().get("JSESSIONID").get(0).getValue());
-		result = clientForMultiAuthn.get().uri(redirectAfterLogin)
-				.cookie(newJsessionidCookie.getName(), newJsessionidCookie.getValue())
-				.exchange()
-				.expectStatus().isOk()
-				.expectBody()
-				.returnResult();
-		log.debug("After exchanging auth code for a token, response body = {}",
-				IOUtils.toString(result.getResponseBody(), "UTF8"));
-		assertThat("Redirect destination after getting access token;", redirectAfterLogin, containsString("/user"));
-		*/
 
 		return result;
 	}
