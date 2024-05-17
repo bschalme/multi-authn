@@ -44,7 +44,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.web.embedded.tomcat.TomcatWebServer;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -257,7 +256,6 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 	@Test
 	void getRegistrationPage_happyPath() throws Exception {
 		// Given:
-		TomcatWebServer x;
 
 		// When:
 		mvc.perform(get("/user/registration"))
@@ -289,10 +287,33 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 	}
 
 	@Test
-	void adminPage_happyPath() throws Exception {
-		mvc.perform(get("/admin").with(user("admin").password("adminPass").roles("ADMIN")))
-				.andExpect(status().isOk())
-				.andExpect(view().name("admin"));
+	void loginAsAdmin_happyPath() throws Exception {
+		// Given:
+		TestingAuthenticationToken admin1 = new TestingAuthenticationToken("admin1", "adminPass");
+
+		// When:
+		EntityExchangeResult<byte[]> loggedInResponse = doAuthCodeLogin(admin1, "/admin");
+
+		// Then:
+		String redirectAfterLogin = null;
+		List<String> locationHeaders = loggedInResponse.getResponseHeaders().get(LOCATION);
+		if (locationHeaders != null) {
+			redirectAfterLogin = locationHeaders.stream()
+					.findFirst()
+					.orElseThrow(() -> new IllegalStateException("No redirect after login"));
+		}
+		assertThat("Redirect destination after getting access token;", redirectAfterLogin, containsString("/admin"));
+		log.debug("Got the access token; now being redirected to {}", redirectAfterLogin);
+		Cookie newJsessionidCookie = new Cookie("JSESSIONID",
+				loggedInResponse.getResponseCookies().get("JSESSIONID").get(0).getValue());
+		EntityExchangeResult<byte[]> userHomePageResponse = clientForMultiAuthn.get().uri(redirectAfterLogin)
+				.cookie(newJsessionidCookie.getName(), newJsessionidCookie.getValue())
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody()
+				.returnResult();
+		log.debug("After exchanging auth code for a token, response body = {}",
+				IOUtils.toString(userHomePageResponse.getResponseBody(), "UTF8"));
 	}
 
 	@Test

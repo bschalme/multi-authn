@@ -18,12 +18,13 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
 
     private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
     private Set<String> userRoles = Set.of("ROLE_USER", "OAUTH2_USER", "ROLE_user");
+    private Set<String> adminRoles = Set.of("ROLE_ADMIN", "ROLE_admin");
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
         if (authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                .anyMatch(a -> adminRoles.contains(a.getAuthority()))) {
             redirectStrategy.sendRedirect(request, response, "/admin");
             return;
         }
