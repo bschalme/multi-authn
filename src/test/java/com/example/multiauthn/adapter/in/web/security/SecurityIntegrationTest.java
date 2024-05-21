@@ -1,7 +1,6 @@
 package com.example.multiauthn.adapter.in.web.security;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyOrNullString;
@@ -9,18 +8,14 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.TEXT_HTML_VALUE;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.util.DefaultUriBuilderFactory.EncodingMode.NONE;
@@ -39,7 +34,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -63,7 +57,6 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import com.example.multiauthn.KeycloakTestContainers;
 import com.example.multiauthn.application.port.in.RegistrationUseCase;
 import com.example.multiauthn.application.port.out.UserPort;
-import com.example.multiauthn.domain.UserDto;
 
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
@@ -331,34 +324,21 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 	}
 
 	@Test
-	@Disabled("Need to set up a Admin user.")
-	void adminLogin_happyPath() throws Exception {
-		// Given:
-		when(mockUserPort.findByUsername(eq("admin"))).thenReturn(UserDto.builder()
-				.username("fbar")
-				.password("$2a$11$k9uX0rgGd8WWWYdzFHeIGuWLFZ1I5XuvbXyqelYbFXiy0/6tziq6m")
-				.roles(asList("ROLE_ADMIN"))
-				.build());
-
-		// When:
-		mvc.perform(formLogin().user("admin").password("qwerty"))
-				.andExpect(status().is3xxRedirection())
-				.andExpect(header().string(LOCATION, endsWith("/admin")));
-	}
-
-	@Test
-	@Disabled("Need to set up a multi-role user.")
 	void multiRoleUserLogin_getsHighestPage() throws Exception {
 		// Given:
-		when(mockUserPort.findByUsername(eq("admin"))).thenReturn(UserDto.builder()
-				.username("fbar")
-				.password("$2a$11$k9uX0rgGd8WWWYdzFHeIGuWLFZ1I5XuvbXyqelYbFXiy0/6tziq6m")
-				.roles(asList("ROLE_USER", "ROLE_ADMIN"))
-				.build());
+		TestingAuthenticationToken powerUser = new TestingAuthenticationToken("admin1", "adminPass");
 
 		// When:
-		mvc.perform(formLogin().user("admin").password("qwerty"))
-				.andExpect(status().is3xxRedirection())
-				.andExpect(header().string(LOCATION, endsWith("/admin")));
+		EntityExchangeResult<byte[]> loggedInResponse = doAuthCodeLogin(powerUser, "/admin");
+
+		// Then:
+		String redirectAfterLogin = null;
+		List<String> locationHeaders = loggedInResponse.getResponseHeaders().get(LOCATION);
+		if (locationHeaders != null) {
+			redirectAfterLogin = locationHeaders.stream()
+					.findFirst()
+					.orElseThrow(() -> new IllegalStateException("No redirect after login"));
+		}
+		assertThat("Redirect destination after getting access token;", redirectAfterLogin, containsString("/admin"));
 	}
 }

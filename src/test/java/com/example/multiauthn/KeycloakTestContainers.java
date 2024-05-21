@@ -79,6 +79,19 @@ public abstract class KeycloakTestContainers {
         adminRole = springBootKeycloakRealm.roles().get("admin").toRepresentation();
         admin1Resource.roles().realmLevel()
                 .add(List.of(adminRole));
+
+        UserRepresentation powerUser = new UserRepresentation();
+        powerUser.setUsername("powerUser");
+        powerUser.setEnabled(true);
+        response = usersResource.create(powerUser);
+        passwordCred = new CredentialRepresentation();
+        passwordCred.setTemporary(false);
+        passwordCred.setType(CredentialRepresentation.PASSWORD);
+        passwordCred.setValue("powerPass");
+        UserResource powerUserResource = usersResource.get(CreatedResponseUtil.getCreatedId(response));
+        powerUserResource.resetPassword(passwordCred);
+        powerUserResource.roles().realmLevel()
+                .add(List.of(userRealmRole, adminRole));
         // Get client
         /* 
         ClientRepresentation multiAuthnClient = springBootKeycloakRealm.clients() //
