@@ -24,8 +24,21 @@ You will need to set a bunch of OAuth2 Client IDs and secrets. Take `setenv-samp
 
 ```. ./setenv```
 
-Then run multi-authn:
+Run Keycloak:
+
+```
+docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin \ 
+--volume ./src/test/resources/keycloak:/opt/keycloak/data/import \
+quay.io/keycloak/keycloak:24.0.4 start-dev --import-realm
+```
+
+Browse to Keycloak at [http://localhost:8080](http://localhost:8080), and in the realm
+SpringBootKeycloak:
+* Add user user1, password xsw2@WS
+* Add that user1 to Realm role "user"
+
+Then in another shell, run multi-authn:
 
 ```./mvnw spring-boot:run```
 
-Browse to [http://localhost:8080](http://localhost:8080).
+Browse to multi-authn at [http://localhost:8081](http://localhost:8081). Log in as user1.
