@@ -87,6 +87,7 @@ public class SecurityConfig {
                             .requestMatchers("/user")
                             .hasAuthority("ROLE_user");
                 })
+                .oauth2Client(Customizer.withDefaults())
                 .oauth2Login(c -> c.successHandler(myAuthenticationSuccessHandler))
                 .oauth2ResourceServer(res -> res.jwt(Customizer.withDefaults()))
                 .logout(logout -> logout.addLogoutHandler(keycloakLogoutHandler)

@@ -266,7 +266,7 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 				.header(ACCEPT, TEXT_HTML_VALUE)
 				.exchange()
 				.expectStatus().is3xxRedirection()
-				.expectHeader().value(LOCATION, endsWith("/login"))
+				.expectHeader().value(LOCATION, endsWith("/oauth2/authorization/keycloak"))
 				.expectBody()
 				.returnResult();
 	}

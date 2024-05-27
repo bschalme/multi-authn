@@ -21,9 +21,6 @@ spring:
             issuer-uri: http://localhost:8080/realms/SpringBootKeycloak
             user-name-attribute: preferred_username
         registration:
-          github:
-            client-id: ${GITHUB_CLIENT_ID}
-            client-secret: ${GITHUB_CLIENT_SECRET}
           keycloak:
             client-id: multi-authn
             authorization-grant-type: authorization_code
