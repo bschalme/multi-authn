@@ -23,10 +23,12 @@ public class UserController {
         OAuth2AuthorizedClient authorizedClient = this.authorizedClientService.loadAuthorizedClient("keycloak",
                 authn.getName());
 
-        OAuth2AccessToken accessToken = authorizedClient.getAccessToken();
-        OAuth2RefreshToken refreshToken = authorizedClient.getRefreshToken();
-        log.debug("Access token = {}", accessToken.getTokenValue());
-        log.debug("Refresh token = {}", refreshToken != null ? refreshToken.getTokenValue() : "(null)");
+        if (authorizedClient != null) {
+            OAuth2AccessToken accessToken = authorizedClient.getAccessToken();
+            OAuth2RefreshToken refreshToken = authorizedClient.getRefreshToken();
+            log.debug("Access token = {}", accessToken.getTokenValue());
+            log.debug("Refresh token = {}", refreshToken != null ? refreshToken.getTokenValue() : "(null)");
+        }
         return "user";
     }
 }

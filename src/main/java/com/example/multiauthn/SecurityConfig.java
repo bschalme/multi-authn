@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
@@ -48,6 +49,8 @@ public class SecurityConfig {
     private final AuthenticationSuccessHandler myAuthenticationSuccessHandler;
 
     private final LogoutSuccessHandler myLogoutSuccessHandler;
+
+    private final AccessDeniedHandler myAccessDeniedHandler;
 
     private final LogoutHandler keycloakLogoutHandler;
 
@@ -76,7 +79,7 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(authz -> {
                     authz.requestMatchers("/", "/favicon.ico", "/h2-console/**", "/login/**", "/logout*", "/loggedout*",
-                            "/user/registration*")
+                            "/accessDenied*", "/error", "/user/registration*", "/css/**")
                             .permitAll()
                             .requestMatchers("/home")
                             .authenticated()
@@ -90,6 +93,7 @@ public class SecurityConfig {
                 .oauth2Client(Customizer.withDefaults())
                 .oauth2Login(c -> c.successHandler(myAuthenticationSuccessHandler))
                 .oauth2ResourceServer(res -> res.jwt(Customizer.withDefaults()))
+                .exceptionHandling(exception -> exception.accessDeniedHandler(myAccessDeniedHandler))
                 .logout(logout -> logout.addLogoutHandler(keycloakLogoutHandler)
                         .logoutSuccessHandler(myLogoutSuccessHandler)
                         .invalidateHttpSession(true)
