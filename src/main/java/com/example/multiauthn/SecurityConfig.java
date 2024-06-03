@@ -101,7 +101,8 @@ public class SecurityConfig {
                             .hasAuthority("ROLE_user");
                 })
                 .oauth2Client(Customizer.withDefaults())
-                .oauth2Login(c -> c.successHandler(myAuthenticationSuccessHandler))
+                .oauth2Login(c -> c.loginPage("/oauth2/authorization/keycloak")
+                        .successHandler(myAuthenticationSuccessHandler))
                 .oauth2ResourceServer(res -> res.jwt(Customizer.withDefaults()))
                 .exceptionHandling(exception -> exception.accessDeniedHandler(myAccessDeniedHandler))
                 .logout(logout -> logout.addLogoutHandler(keycloakLogoutHandler)

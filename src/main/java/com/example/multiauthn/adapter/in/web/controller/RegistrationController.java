@@ -62,7 +62,7 @@ public class RegistrationController {
 
         error.ifPresent(e -> model.addAttribute("error", e));
 
-        return new ModelAndView("login", model);
+        return new ModelAndView("redirect:/oauth2/authorization/keycloak", model);
     }
 
 }
