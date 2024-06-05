@@ -28,7 +28,7 @@
     </nav>
     <div class="container">
         <div class="form-header">
-            <h1 th:utext="#{label.pages.admin.message}">Welcome</h1>
+            <h1 th:utext="#{label.pages.admin.message(${user.givenName})}">Welcome</h1>
         </div>
     </div>
 </body>

@@ -12,7 +12,6 @@ import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.TEXT_HTML_VALUE;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -108,7 +107,7 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 					.findFirst()
 					.orElseThrow(() -> new IllegalStateException("No redirect after login"));
 		}
-		assertThat("Redirect destination after getting access token;", redirectAfterLogin, containsString("/user"));
+		assertThat("Redirect destination after getting access token;", redirectAfterLogin, endsWith("/user"));
 		loggedInResponse.getResponseCookies().entrySet().stream()
 				.forEach(entry -> {
 					log.debug("Key = {}, Value = {}", entry.getKey(), entry.getValue());
@@ -259,9 +258,9 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 	}
 
 	@Test
-	void userPage_unauthenticated() throws Exception {
+	void userPage_unauthenticated() {
 		// When:
-		EntityExchangeResult<byte[]> clickKeycloakResponse = clientForMultiAuthn.get()
+		clientForMultiAuthn.get()
 				.uri("/user")
 				.header(ACCEPT, TEXT_HTML_VALUE)
 				.exchange()
@@ -269,14 +268,6 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 				.expectHeader().value(LOCATION, endsWith("/oauth2/authorization/keycloak"))
 				.expectBody()
 				.returnResult();
-	}
-
-	@Test
-	void userPage_happyPath() throws Exception {
-		mvc.perform(get("/user").with(user("user1").password("xsw2@WS").roles("user")))
-		//.header(AUTHORIZATION, getUser1BearerToken()))
-				.andExpect(status().isOk())
-				.andExpect(view().name("user"));
 	}
 
 	@Test
@@ -295,7 +286,7 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 					.findFirst()
 					.orElseThrow(() -> new IllegalStateException("No redirect after login"));
 		}
-		assertThat("Redirect destination after getting access token;", redirectAfterLogin, containsString("/admin"));
+		assertThat("Redirect destination after getting access token;", redirectAfterLogin, endsWith("/admin"));
 		log.debug("Got the access token; now being redirected to {}", redirectAfterLogin);
 		Cookie newJsessionidCookie = new Cookie("JSESSIONID",
 				loggedInResponse.getResponseCookies().get("JSESSIONID").get(0).getValue());

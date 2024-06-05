@@ -6,7 +6,9 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.ModelAndView;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +21,7 @@ public class UserController {
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     @GetMapping("/user")
-    public String userHome(Authentication authn) {
+    public ModelAndView userHome(Authentication authn) {
         OAuth2AuthorizedClient authorizedClient = this.authorizedClientService.loadAuthorizedClient("keycloak",
                 authn.getName());
 
@@ -28,7 +30,10 @@ public class UserController {
             OAuth2RefreshToken refreshToken = authorizedClient.getRefreshToken();
             log.debug("Access token = {}", accessToken.getTokenValue());
             log.debug("Refresh token = {}", refreshToken != null ? refreshToken.getTokenValue() : "(null)");
+        } else {
+            log.warn("No authorized client found for user {}", authn.getName());
         }
-        return "user";
+        ModelMap modelMap = new ModelMap("user", authn.getPrincipal());
+        return new ModelAndView("user", modelMap);
     }
 }
