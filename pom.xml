@@ -21,6 +21,7 @@
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 		<sonar.sources>src/main/java,src/main/resources/templates</sonar.sources>
 		<sonar.tests>src/test/java</sonar.tests>
+		<sonar.coverage.exclusions>src/main/java/com/example/multiauthn/*Config.*</sonar.coverage.exclusions>
 	</properties>
 	<dependencies>
 	    <dependency>
