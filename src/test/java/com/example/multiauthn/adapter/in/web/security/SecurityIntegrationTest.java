@@ -332,4 +332,23 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 		}
 		assertThat("Redirect destination after getting access token;", redirectAfterLogin, containsString("/admin"));
 	}
+
+	@Test
+	void loginAsUserWithNoRole_OopsPage() throws Exception {
+		// Given:
+		TestingAuthenticationToken user2 = new TestingAuthenticationToken("user2", "user2Pass");
+
+		// When:
+		EntityExchangeResult<byte[]> loggedInResponse = doAuthCodeLogin(user2, "/noRolesAssigned");
+
+		// Then:
+		String redirectAfterLogin = null;
+		List<String> locationHeaders = loggedInResponse.getResponseHeaders().get(LOCATION);
+		if (locationHeaders != null) {
+			redirectAfterLogin = locationHeaders.stream()
+					.findFirst()
+					.orElseThrow(() -> new IllegalStateException("No redirect after login"));
+		}
+		assertThat("Redirect destination after getting access token;", redirectAfterLogin, containsString("/noRolesAssigned"));
+	}
 }

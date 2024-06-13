@@ -89,7 +89,7 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(authz -> {
                     authz.requestMatchers("/", "/favicon.ico", "/h2-console/**", "/login/**", "/logout*", "/loggedout*",
-                            "/accessDenied*", "/error", "/user/registration*", "/css/**")
+                            "/accessDenied*", "/noRolesAssigned", "/error", "/user/registration*", "/css/**")
                             .permitAll()
                             .requestMatchers("/home")
                             .authenticated()

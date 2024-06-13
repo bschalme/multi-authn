@@ -32,7 +32,7 @@ public abstract class KeycloakTestContainers {
     protected static final String authServerUrl;
 
     static {
-        keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.3")
+        keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:25.0.0")
                 .withRealmImportFile("keycloak/realm-export.json");
         keycloak.start();
         authServerUrl = keycloak.getAuthServerUrl();
@@ -92,6 +92,18 @@ public abstract class KeycloakTestContainers {
         powerUserResource.resetPassword(passwordCred);
         powerUserResource.roles().realmLevel()
                 .add(List.of(userRealmRole, adminRole));
+
+        UserRepresentation user2 = new UserRepresentation();
+        user2.setUsername("user2");
+        user2.setEnabled(true);
+        response = usersResource.create(user2);
+        passwordCred = new CredentialRepresentation();
+        passwordCred.setTemporary(false);
+        passwordCred.setType(CredentialRepresentation.PASSWORD);
+        passwordCred.setValue("user2Pass");
+        UserResource user2Resource = usersResource.get(CreatedResponseUtil.getCreatedId(response));
+        user2Resource.resetPassword(passwordCred);
+
         // Get client
         /* 
         ClientRepresentation multiAuthnClient = springBootKeycloakRealm.clients() //

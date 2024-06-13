@@ -12,8 +12,10 @@ import org.springframework.stereotype.Component;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
@@ -31,7 +33,10 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
         if (authentication.getAuthorities().stream()
                 .anyMatch(a -> userRoles.contains(a.getAuthority()))) {
             redirectStrategy.sendRedirect(request, response, "/user");
+            return;
         }
+        log.warn("User: {} has no roles assigned", authentication.getName());
+        redirectStrategy.sendRedirect(request, response, "/noRolesAssigned");
     }
 
 }

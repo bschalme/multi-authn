@@ -10,4 +10,9 @@ public class ErrorController {
     public String accessDenied() {
         return "accessDenied";
     }
+
+    @GetMapping("/noRolesAssigned")
+    public String noRolesAssigned() {
+        return "noRolesAssigned";
+    }
 }
