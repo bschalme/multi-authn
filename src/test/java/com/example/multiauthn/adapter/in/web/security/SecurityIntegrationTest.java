@@ -92,7 +92,7 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 	}
 
 	@Test
-	void performLoginAsUser_happyPath() throws Exception {
+	void performLoginLogoutAsUser_happyPath() throws Exception {
 		// Given:
 		TestingAuthenticationToken user1 = new TestingAuthenticationToken("user1", "xsw2@WS");
 
@@ -123,6 +123,34 @@ class SecurityIntegrationTest extends KeycloakTestContainers {
 				.returnResult();
 		log.debug("After exchanging auth code for a token, response body = {}",
 				IOUtils.toString(userHomePageResponse.getResponseBody(), "UTF8"));
+
+		clientForMultiAuthn.get().uri("/logout")
+				.cookie(newJsessionidCookie.getName(), newJsessionidCookie.getValue())
+				.exchange()
+				.expectStatus().is3xxRedirection()
+				.expectHeader().value(LOCATION, containsString("/loggedout"))
+				.expectBody()
+				.returnResult();
+	}
+
+	@Test
+	void userAccessesAdminPage_forbidden() throws Exception {
+		// Given:
+		TestingAuthenticationToken user1 = new TestingAuthenticationToken("user1", "xsw2@WS");
+		EntityExchangeResult<byte[]> loggedInResponse = doAuthCodeLogin(user1, "/user");
+		Cookie newJsessionidCookie = new Cookie("JSESSIONID",
+				loggedInResponse.getResponseCookies().get("JSESSIONID").get(0).getValue());
+
+		// When:
+		clientForMultiAuthn.get().uri("/admin")
+				.cookie(newJsessionidCookie.getName(), newJsessionidCookie.getValue())
+				.exchange()
+				.expectStatus().is3xxRedirection()
+				.expectHeader().value(LOCATION, containsString("/accessDenied"))
+				.expectBody()
+				.returnResult();
+
+		// Then:
 	}
 
 	private EntityExchangeResult<byte[]> doAuthCodeLogin(TestingAuthenticationToken user,
